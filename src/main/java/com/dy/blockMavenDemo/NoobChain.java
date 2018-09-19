@@ -109,6 +109,23 @@ public class NoobChain {
 
         isChainValid();
 
+        for (int i = 0; i < 30; i++){
+            Block blockx = new Block(blockchain.get(blockchain.size() -  1).hash);
+            blockx.addTransaction(walletA.sendFunds(walletB.publicKey, 0.5f));
+            addBlock(blockx);
+        }
+        for (int i = 0; i < 30; i++){
+            Block blockx = new Block(blockchain.get(blockchain.size() -  1).hash);
+            blockx.addTransaction(walletB.sendFunds(walletA.publicKey, 1f));
+            addBlock(blockx);
+        }
+
+
+        System.out.println("\nWalletA's balance is: " + walletA.getBalance());
+        System.out.println("WalletB's balance is: " + walletB.getBalance());
+
+        isChainValid();
+
         //开始动态操作钱包
         while (1 == 1) {
             Scanner scan = new Scanner(System.in);
