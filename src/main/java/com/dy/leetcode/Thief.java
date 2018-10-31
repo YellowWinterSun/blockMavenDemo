@@ -1,11 +1,9 @@
-package com.dy.simpleAlgorithm;
+package com.dy.leetcode;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
- * 类的描述
+ * LeetCode 打家劫舍I,II,III
  *
  * @author HuangDongYang<huangdy @ pvc123.com>
  * Create on 2018/9/19 8:30
@@ -13,10 +11,43 @@ import java.util.List;
 public class Thief {
 
     public static void main(String[] args){
-        int[] a = {2,7,9,3,1};
-        System.out.println("这些房间中能偷到的最大钱: " + func(a));
+        int[] a = {1,2,3,1};
+        System.out.println("这些房间中能偷到的最大钱: " + func2(a));
+
     }
 
+    //打家劫舍II
+    public static int func2(int[] a){
+        if (a.length == 1){
+            return a[0];
+        }
+        if (a.length == 2){
+            return Math.max(a[0], a[1]);
+        }
+
+        int[] f = new int[a.length];    //偷第一个房间的情况下，只有index个房间时的最大价值
+        int[] g = new int[a.length];    //不偷第一个房间的情况下，第i个房间的最大价值
+
+        f[0] = a[0];
+        f[1] = a[0];
+        g[0] = 0;
+        g[1] = a[1];
+
+        for (int i = 2; i < a.length; i++){
+            if (i == a.length - 1){
+                //到末尾了
+                f[i] = f[i-1];
+                g[i] = Math.max(g[i-2] + a[i], g[i-1]);
+                break;
+            }
+            f[i] = Math.max(a[i] + f[i-2], f[i-1]);
+            g[i] = Math.max(a[i] + g[i-2], g[i-1]);
+        }
+
+        return Math.max(f[a.length-1], g[a.length-1]);
+    }
+
+    //打家劫舍I
     public static int func(int[] a){
         if (a.length == 1){
             return a[0];
