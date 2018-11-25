@@ -12,6 +12,7 @@ public class EP44 {
     public static void main(String[] args){
         String s = "http://localhost:8080/manifestOut/1/addPost";     // 拦截的URL请求
         String p = "http://localhost:8080/manifestOut/*/addPost1";       // 当前用户拥有的某条权限URL
+        //nice
 
         long time1 = System.currentTimeMillis();
         for (int i = 0; i < 100; ++i)
