@@ -20,14 +20,117 @@ public class jedisTest {
 
     public static void main(String[] args){
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(GenericObjectPoolConfig.DEFAULT_MAX_TOTAL * 5);  //设置最大连接数
-        poolConfig.setMaxIdle(GenericObjectPoolConfig.DEFAULT_MAX_IDLE * 3);    //设置最大空闲数
+        poolConfig.setMaxTotal(4/*GenericObjectPoolConfig.DEFAULT_MAX_TOTAL * 5*/);  //设置最大连接数
+        poolConfig.setMaxIdle(4/*GenericObjectPoolConfig.DEFAULT_MAX_IDLE * 3*/);    //设置最大空闲数
         poolConfig.setMinIdle(GenericObjectPoolConfig.DEFAULT_MIN_IDLE);    //设置最小空闲数
         poolConfig.setJmxEnabled(true);
-        poolConfig.setMaxWaitMillis(10000); //最大等待时间10s
+        poolConfig.setMaxWaitMillis(1000); //最大等待时间
+        poolConfig.setBlockWhenExhausted(true);
+        poolConfig.setTimeBetweenEvictionRunsMillis(10*1000);    //30s
+        poolConfig.setNumTestsPerEvictionRun(-1);
+        poolConfig.setMinEvictableIdleTimeMillis(5*1000L);
+        poolConfig.setTestWhileIdle(true);
 
         //JedisPool jedisPool = new JedisPool(poolConfig, "192.168.40.130", 6380);
-        JedisPool jedisPool = new JedisPool(poolConfig, "172.28.1.53", 6379);
+        final JedisPool jedisPool = new JedisPool(poolConfig, "172.28.1.53", 6379);
+
+        Jedis jedis1 = null;
+        Jedis jedis2 = null;
+        Jedis jedis3 = null;
+        Jedis jedis4 = null;
+        Jedis jedis5 = null;
+        try {
+             jedis1 = jedisPool.getResource();
+             System.out.println("---1 get redis success");
+             jedis2 = jedisPool.getResource();
+             System.out.println("---2 get redis success");
+             jedis3 = jedisPool.getResource();
+             System.out.println("---3 get redis success");
+             jedis4 = jedisPool.getResource();
+             System.out.println("---4 get redis success");
+             jedis5 = jedisPool.getResource();
+             System.out.println("---5 get redis success");
+        } catch (Exception ex){
+            ex.printStackTrace();
+        } finally {
+            if (null != jedis1){
+                jedis1.close();
+            }
+            if (null != jedis2){
+                jedis2.close();
+            }
+            if (null != jedis3){
+                jedis3.close();
+            }if (null != jedis4){
+                jedis4.close();
+            }
+            if (null != jedis5){
+                jedis5.close();
+            }
+
+        }
+
+
+        for (int i = 0; i < 1; i++) {
+            //测试高并发
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    long threadId = Thread.currentThread().getId();
+                    //System.out.println("------启动线程：" + threadId);
+
+                    for (int i = 0; i < 500; i++) {
+                        //System.out.println("-----1");
+                        Jedis jedis = null;
+                        try {
+                            jedis = jedisPool.getResource();
+                            jedis.auth("123456");
+                            jedis.set("key1", "set " + threadId + "," + i);
+
+                            //System.out.println(jedis.get("key1") + "睡觉");
+                            Thread.sleep(1000);
+                        } catch (Exception e) {
+                            System.out.println("error1" + e.getMessage());
+                        } finally {
+                            if (null != jedis) {
+                                jedis.close();
+                            }
+                        }
+                    }
+
+
+                }
+            }).start();
+
+            //测试高并发
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    long threadId = Thread.currentThread().getId();
+                    //System.out.println("------启动线程2：" + threadId);
+
+                    for (int i = 0; i < 500; i++) {
+                        //System.out.println("-----2");
+                        Jedis jedis = null;
+                        try {
+                            jedis = jedisPool.getResource();
+                            jedis.auth("123456");
+                            jedis.set("key2", "set " + threadId + "," + i);
+                            //System.out.println(jedis.get("key2"));
+                            Thread.sleep(2000);
+                        } catch (Exception e) {
+                            System.out.println("error2" + e.getMessage());
+                        } finally {
+                            if (null != jedis) {
+                                jedis.close();
+                            }
+                        }
+                    }
+
+
+                }
+            }).start();
+        }
 
         Jedis jedis = null;
         try {
@@ -73,6 +176,20 @@ public class jedisTest {
             if (null != jedis){
                 jedis.close();
             }
+        }
+        try {
+            Thread.sleep(15 * 1000L);
+
+            System.out.println("睡觉");
+            System.out.println("活跃中" + jedisPool.getNumActive());
+            System.out.println("闲置中" + jedisPool.getNumIdle());
+
+            Thread.sleep(15 * 1000L);
+
+            System.out.println("活跃中" + jedisPool.getNumActive());
+            System.out.println("闲置中" + jedisPool.getNumIdle());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
